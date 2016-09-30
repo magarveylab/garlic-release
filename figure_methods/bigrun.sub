@@ -1,0 +1,19 @@
+#!/bin/sh
+
+FILELIST="$1"
+SUBJECTDIR="$2"
+OUTDIR="$3"
+
+#$ -S /bin/bash
+#$ -V
+
+#merge stderr and stdout streams 
+#$-j y
+
+#Set as parallel env
+#$ -pe smp-high 2
+
+F_PATH=$(awk "NR==$SGE_TASK_ID" $FILELIST)
+F_BASE=$(basename -s .fasta.json $F_PATH)
+java -jar /mnt/storage/grid/home/edwarm/garlicM.jar -c -d $F_BASE -q $F_PATH -s $SUBJECTDIR -o "$OUTDIR" -i scoring_opt_from_refined.json
+

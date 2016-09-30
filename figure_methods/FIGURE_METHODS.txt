@@ -1,0 +1,52 @@
+A description of how the HYBRID/PK/NRP bar charts were created,
+those that show the results of garlic used to compare all sequences against all compounds.
+
+-Mclean Edwards
+
+Throughout, and for file generation, there are three streams of processing.
+These are HYBRID, PK, and NRP.
+The keyword WHICH should be substituted with each of these in turn.
+
+Aside from garlic, the parameters and directories used are listed at the top of the script files.
+Modify these as appropriate.
+
+Step 1: Filter PRISM outputs by length and quality, and categorize into WHICH
+This is done by creating text file lists.
+Run the modified garlic programs for each stream, capturing the output in seperate lists.
+java -jar garlicGenWHICHList -q <json_directory> -s <same_json_directory> > WHICHbiglist.txt
+
+These modified garlic files simply go through all provided PRISM json files
+in the input directory and print out only those clusters in WHICH which have 4 or more domains
+and are verified as complete.
+
+Step 2:  Run garlic using grid computing
+Use the grid script bigrun.sh and bigrun.sub to run each prism file in WHICHbiglist.txt
+against the entire compound database using garlic.
+
+On the grid:
+bash bigrun.sh
+
+This outputs results for each sequence in a separate file in WHICH subdirectories.
+
+Step 3: Create comparison matrices/spreadsheets using garlic outputs.
+Run the script bringtogether.sh
+
+bash bringtogether.sh
+
+This script creates a giant csv file for WHICH which takes all garlic outputs
+and combines them into a large csv comparison matrix file for WHICH, comparing the 
+match scores of all sequences (by PRISM output) to all compounds (by GRAPE output).
+
+Four matrix files are created, for score, relative_score, raw_score, and sugarscore.
+
+
+Step 4:  Generate the histograms
+Run genHistograms.py for WHICH, modifying the script to use WHICH.
+
+python genHistograms.py
+
+This will create a number of histogram pdf files.
+By default, this script uses the relative score.
+
+
+
