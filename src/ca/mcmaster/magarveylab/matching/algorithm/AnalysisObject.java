@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.openscience.cdk.exception.CDKException;
-
 import ca.mcmaster.magarveylab.matching.algorithm.alignment.AlignmentObject;
 import ca.mcmaster.magarveylab.matching.algorithm.scoring.ScoreCalculator;
 import ca.mcmaster.magarveylab.matching.breakdowns.Breakdown;
@@ -26,7 +24,7 @@ public class AnalysisObject {
  * @throws CDKException
  * @throws IOException
  */
-	public AnalysisObject(Breakdown queryBreakdown, List<Breakdown> subjectBreakdowns, ScoreCalculator scoreCalculator) throws CDKException, IOException{
+	public AnalysisObject(Breakdown queryBreakdown, List<Breakdown> subjectBreakdowns, ScoreCalculator scoreCalculator) throws IOException{
 	
 		AlignmentObject selfAlignment = scoreCalculator.getUnpermutedAlignment(queryBreakdown, queryBreakdown);
 		Double selfScoreQ = selfAlignment.getScore();

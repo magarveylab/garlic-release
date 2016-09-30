@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.openscience.cdk.exception.CDKException;
-
 import ca.mcmaster.magarveylab.matching.algorithm.scoring.ScoreCalculator;
 import ca.mcmaster.magarveylab.matching.algorithm.scoring.ScoringScheme;
 import ca.mcmaster.magarveylab.matching.breakdowns.Breakdown;
@@ -24,7 +22,7 @@ public class Analyzer {
 	 * @throws IOException 
 	 * @throws InterruptedException 
 	 */
-	public Analyzer(List<Breakdown> queryBreakdowns, List<Breakdown> subjectBreakdowns, ScoringScheme scoringScheme, int threadMax) throws CDKException, IOException, InterruptedException{
+	public Analyzer(List<Breakdown> queryBreakdowns, List<Breakdown> subjectBreakdowns, ScoringScheme scoringScheme, int threadMax) throws IOException, InterruptedException{
 		
 		scoreCalculator = new ScoreCalculator(scoringScheme);
 		//OPT: uncomment below for faster PRISMGRAPE/GRAPEPRISM, but less detailed GRAPEGRAPE analysis
