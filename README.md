@@ -26,6 +26,10 @@ The dependant libraries are located in this repository. The neo4j library will s
 
 Garlic is also dependant on the [enums](https://github.com/magarveylab/enums-releases) package released by the magarveylab located here:
 
+## Publication relevant files
+
+The scripts used to generate figures and results from PRISM and GRAPE data is located in figure_methods, plotting, and pub_tests
+
 ## Citing GARLIC
 
 Please cite: 
