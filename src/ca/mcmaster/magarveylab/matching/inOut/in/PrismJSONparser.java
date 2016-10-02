@@ -257,7 +257,7 @@ public class PrismJSONparser {
 	private void parseOrfInfo(Map<String, Object> orf) {
 		String type = (String) orf.get("type");
 		if(type != null && (type.equals("ribosomal") || type.equals("prerequisite"))){ //both are part of ribosomal clusters
-			prismBreakdown.addRibosomalOrf(parseRibosomalOrf(orf, type));
+			//skip
 		}else{
 			List<Map<String, Object>> domains = (ArrayList<Map<String, Object>>)orf.get("domains");
 			if(domains == null) return; // Return if there are no domains on this orf (ie no useful information)
@@ -296,30 +296,6 @@ public class PrismJSONparser {
 			}
 			if(nodeString.getChemicalNodes().size() > 0) chemicalAbstraction.addNodeString(nodeString);
 		}
-	}
-	
-	private RibosomalOrf parseRibosomalOrf(Map<String, Object> orf, String type) { //Only need to add data to this part to populate chemical abstraction
-		List<Map<String, Object>> domains = (ArrayList<Map<String, Object>>)orf.get("domains");
-		String sequence = (String)orf.get("sequence");
-		RibosomalOrf RibosomalOrf = new RibosomalOrf(sequence);
-		if(domains != null){
-			for(Map<String, Object> domain : domains){
-				DomainType dom = null;
-				if(type.equals("prerequisite")){
-					String name = (String)domain.get("name");
-					dom = PrerequisiteDomains.getPrerequsiteDomainFromAbbreviation(name);
-				}else{ //type == ribosomal
-					String name = (String)domain.get("name");
-				//	dom = RibosomalDomains.getRibosomalDomainFromAbbreviation(name);
-				}
-				if(dom != null){
-					int start = (int)domain.get("start");
-					int end = (int)domain.get("stop");
-					RibosomalOrf.addDomain(dom, start, end);
-				}
-			}
-		}
-		return(RibosomalOrf);
 	}
 
 	private void parseModuleInfo(int moduleNumber, Map<String, Object> domain){
