@@ -101,8 +101,6 @@ public class PrismJSONparser {
 		Map<String, Object> input = (Map<String, Object>)prismResults.get("input");
 		String description = (String)input.get("description");
 		String fileName = (String)input.get("filename");
-		String magarveyIDString = (String)input.get("magarvey_id");
-		int magarveyID = Integer.parseInt(magarveyIDString);
 		List<Map<String, Object>> regulatoryGenes = new ArrayList<Map<String, Object>>();
 		
 		//Check for which type of data structure it is (not consistant, needs to be fixed in prism
@@ -166,7 +164,6 @@ public class PrismJSONparser {
 				int clusterFromEnd = sequenceLength - (int)cluster.get("end");
 				pBreakdown.setClusterStart(clusterStart);
 				pBreakdown.setClusterEnd((int)cluster.get("end"));
-				pBreakdown.setMagarveyID(magarveyID);
 				if(clusterStart >= 20000 && clusterFromEnd >= 20000) pBreakdown.setComplete(true);
 			}
 			pBreakdown.setColinear();
