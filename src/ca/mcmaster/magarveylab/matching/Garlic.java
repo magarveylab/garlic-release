@@ -149,7 +149,7 @@ public class Garlic {
 					if(query.getID() != null){
 						name = query.getID();
 					}else{
-						name = query.getFileName().replace(" ", "-");
+						name = query.getName().replace(" ", "-");
 					}
 					PrintWriter writer;
 					try {

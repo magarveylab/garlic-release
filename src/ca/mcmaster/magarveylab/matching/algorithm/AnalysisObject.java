@@ -42,9 +42,7 @@ public class AnalysisObject {
 			}
 			alignment.setSelfScore(selfScoreQ);
 			alignment.setRelativeScore(alignment.getScore()/(selfScoreQ));
-			if(alignment.getRelativeScore() >= 0.3){
-				alignmentObjects.add(alignment);
-			}
+			alignmentObjects.add(alignment);
 		}
 	}
 	
