@@ -35,3 +35,7 @@ The scripts used to generate figures and results from PRISM and GRAPE data is lo
 Please cite: 
 
 > XXXXXXXXX
+
+## DISCLAIMER
+
+This software is patent pending
