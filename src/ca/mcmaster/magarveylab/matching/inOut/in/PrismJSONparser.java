@@ -15,16 +15,13 @@ import org.codehaus.jackson.type.TypeReference;
 
 import ca.mcmaster.magarveylab.enums.domains.BetaLactamDomains;
 import ca.mcmaster.magarveylab.enums.domains.DomainType;
-import ca.mcmaster.magarveylab.enums.domains.PrerequisiteDomains;
 import ca.mcmaster.magarveylab.enums.domains.RegulatorDomains;
 import ca.mcmaster.magarveylab.enums.domains.ResistanceDomains;
-import ca.mcmaster.magarveylab.enums.domains.RibosomalDomains;
 import ca.mcmaster.magarveylab.matching.breakdowns.PrismBreakdown;
 import ca.mcmaster.magarveylab.matching.chem.ChemicalAbstraction;
 import ca.mcmaster.magarveylab.matching.chem.ChemicalAbstraction.Presence;
 import ca.mcmaster.magarveylab.matching.chem.ChemicalNodeString;
 import ca.mcmaster.magarveylab.matching.chem.nodetypes.GeneticDomain;
-import ca.mcmaster.magarveylab.matching.chem.nodetypes.RibosomalOrf;
 import ca.mcmaster.magarveylab.matching.enums.AcylAdenylatingSubstrates;
 import ca.mcmaster.magarveylab.matching.enums.ChemicalClassifications.ChemicalType;
 import ca.mcmaster.magarveylab.matching.enums.Monomers;
@@ -181,7 +178,12 @@ public class PrismJSONparser {
 	private PrismBreakdown readCluster(Map<String, Object> clusterMap){
 		prismBreakdown = new PrismBreakdown();
 		chemicalAbstraction = prismBreakdown.getChemicalAbstraction();
-		
+			
+		List<Map<String, Object>> orfs = (ArrayList<Map<String, Object>>)clusterMap.get("orfs");
+		for(Map<String, Object> orf : orfs){
+			currentOrfNumber ++;
+			parseOrfInfo(orf);
+		}
 		if(version < 125){
 			ClusterFamily clusterFamily = ClusterFamily.getClusterFamily((String)clusterMap.get("family"));
 			if(clusterFamily == ClusterFamily.ENEDIYNE){
@@ -202,8 +204,6 @@ public class PrismJSONparser {
 				chemicalAbstraction.setChemicalType(ChemicalType.PK);
 			}else if(clusterType == ClusterType.HYBRID){
 				chemicalAbstraction.setChemicalType(ChemicalType.NRP_PK_HYBRID);
-			}else if(clusterType == ClusterType.RIBOSOMAL){
-				chemicalAbstraction.setChemicalType(ChemicalType.RIBOSOMAL);
 			}
 		}else{
 			List<String> clusterFamilyStrings = (ArrayList<String>)clusterMap.get("family");
@@ -222,9 +222,6 @@ public class PrismJSONparser {
 					chemicalAbstraction.setChemicalSubtype(ChemicalSubtype.TYPE_2);
 					break;
 				}
-				else if(clusterFamily == ClusterFamily.RIBOSOMAL){
-					chemicalAbstraction.setChemicalType(ChemicalType.RIBOSOMAL);
-				}
 			}
 			List<ClusterType> clusterType = ClusterType.getClusterType((ArrayList<String>)clusterMap.get("type"));
 			if(clusterType.contains(ClusterType.NRPS) && clusterType.size() == 1){
@@ -235,13 +232,6 @@ public class PrismJSONparser {
 				chemicalAbstraction.setChemicalType(ChemicalType.NRP_PK_HYBRID);
 			}
 		}
-		
-		List<Map<String, Object>> orfs = (ArrayList<Map<String, Object>>)clusterMap.get("orfs");
-		for(Map<String, Object> orf : orfs){
-			currentOrfNumber ++;
-			parseOrfInfo(orf);
-		}
-		
 		return prismBreakdown;
 	}
 	
@@ -252,49 +242,44 @@ public class PrismJSONparser {
 	private int currentModuleNumber;
 
 	private void parseOrfInfo(Map<String, Object> orf) {
-		String type = (String) orf.get("type");
-		if(type != null && (type.equals("ribosomal") || type.equals("prerequisite"))){ //both are part of ribosomal clusters
-			//skip
-		}else{
-			List<Map<String, Object>> domains = (ArrayList<Map<String, Object>>)orf.get("domains");
-			if(domains == null) return; // Return if there are no domains on this orf (ie no useful information)
-			currentModuleNumber = 1;
-			aaMod = new AAmodule();
-			pkMod = new PKmodule();
-			cMod = new CStarterModule();
-			nodeString = new ChemicalNodeString();
-			for(Map<String, Object> domain : domains){
-				//Boolean orphaned = (Boolean)domain.get("orphaned");
-				//if(orphaned != null && orphaned) continue; //Ignore orphaned domains
-				Boolean onModule = (Boolean)domain.get("on_module");
-				if(onModule != null && onModule){
-					int moduleNumber = (Integer)domain.get("module_number");
-					parseModuleInfo(moduleNumber, domain);
-				}else{ //Not a module
-					nonModuleInfo(domain);
-				}
+		List<Map<String, Object>> domains = (ArrayList<Map<String, Object>>)orf.get("domains");
+		if(domains == null) return; // Return if there are no domains on this orf (ie no useful information)
+		currentModuleNumber = 1;
+		aaMod = new AAmodule();
+		pkMod = new PKmodule();
+		cMod = new CStarterModule();
+		nodeString = new ChemicalNodeString();
+		for(Map<String, Object> domain : domains){
+			//Boolean orphaned = (Boolean)domain.get("orphaned");
+			//if(orphaned != null && orphaned) continue; //Ignore orphaned domains
+			Boolean onModule = (Boolean)domain.get("on_module");
+			if(onModule != null && onModule){
+				int moduleNumber = (Integer)domain.get("module_number");
+				parseModuleInfo(moduleNumber, domain);
+			}else{ //Not a module
+				nonModuleInfo(domain);
 			}
-			if(!pkMod.empty){
-				if(pkMod.getOrigin() == ChemicalNodeOrigin.PRISM_TRANS_AT){
-					chemicalAbstraction.addPKSubstrateInsertion(pkMod.getNode().getSubstrate());
-				}else{
-					pkMod.setModuleNumber(currentModuleNumber);
-					pkMod.setOrfNumber(currentOrfNumber);
-					nodeString.addNode(pkMod.getNode());
-				}
-			}else if(!aaMod.empty){
-				if(aaMod.getNode().getAminoAcidType() == null || !aaMod.getNode().getAminoAcidType().equals(AminoAcidEnum.DOCK)){//TMP FIX BECAUSE DOCK ISNT A REAL MODULE (THANKS MIKE)
-					aaMod.setOrfNumber(currentOrfNumber);
-					aaMod.setModuleNumber(currentModuleNumber);
-					nodeString.addNode(aaMod.getNode());
-				}
-			}else if(!cMod.empty){
-				nodeString.addNode(cMod.getNode());
-			}
-			if(nodeString.getChemicalNodes().size() > 0) chemicalAbstraction.addNodeString(nodeString);
 		}
+		if(!pkMod.empty){
+			if(pkMod.getOrigin() == ChemicalNodeOrigin.PRISM_TRANS_AT){
+				chemicalAbstraction.addPKSubstrateInsertion(pkMod.getNode().getSubstrate());
+			}else{
+				pkMod.setModuleNumber(currentModuleNumber);
+				pkMod.setOrfNumber(currentOrfNumber);
+				nodeString.addNode(pkMod.getNode());
+			}
+		}else if(!aaMod.empty){
+			if(aaMod.getNode().getAminoAcidType() == null || !aaMod.getNode().getAminoAcidType().equals(AminoAcidEnum.DOCK)){//TMP FIX BECAUSE DOCK ISNT A REAL MODULE (THANKS MIKE)
+				aaMod.setOrfNumber(currentOrfNumber);
+				aaMod.setModuleNumber(currentModuleNumber);
+				nodeString.addNode(aaMod.getNode());
+			}
+		}else if(!cMod.empty){
+			nodeString.addNode(cMod.getNode());
+		}
+		if(nodeString.getChemicalNodes().size() > 0) chemicalAbstraction.addNodeString(nodeString);
 	}
-
+	
 	private void parseModuleInfo(int moduleNumber, Map<String, Object> domain){
 		if(currentModuleNumber != moduleNumber){
 			if(!pkMod.empty){
@@ -458,11 +443,12 @@ public class PrismJSONparser {
 			if(domainName.equals("GTr")){
 				GTRmodule gtrMod = new GTRmodule();
 				List<Map<String, Object>> sources = (ArrayList<Map<String, Object>>)domain.get("sources");
+				String source = "GTr";
 				if(sources != null){
-					String source = (String)sources.get(0).get("name");
-					gtrMod.addGene(source, 100.0);
-					if(gtrMod.isHexose()) chemicalAbstraction.addSugarGene(SugarGeneEnum.HEXOSE_GTR);
+					source = (String)sources.get(0).get("name");
 				}
+				gtrMod.addGene(source, 100.0);
+				if(gtrMod.isHexose()) chemicalAbstraction.addSugarGene(SugarGeneEnum.HEXOSE_GTR);
 				parsed = true;
 			}else if(domainName.equals("Cyc")){
 				String domainFullName = (String)domain.get("full_name");
@@ -512,16 +498,7 @@ public class PrismJSONparser {
 			DomainType domainType = BetaLactamDomains.getPossibleBetaLactamDomainsFromAbbreviation(domainName);
 			if(domainType != null){
 				if(domainType.equals(BetaLactamDomains.Sulfazecin_Thioesterase)){
-					double score;
-					try{
-						score = (Double) domain.get("score");
-					}catch(ClassCastException e){
-						int tmp = (Integer) domain.get("score");
-						score = (double) tmp;
-					}
-					if(score > 60){
-						prismBreakdown.addOtherDomain(domainType);
-					}
+					prismBreakdown.addOtherDomain(domainType);
 				}else{
 					prismBreakdown.addOtherDomain(domainType);
 				}
@@ -581,7 +558,6 @@ public class PrismJSONparser {
 		NRPS,
 		PKS,
 		HYBRID,
-		RIBOSOMAL,
 		;
 		
 		private static ClusterType getClusterType(String string) {
